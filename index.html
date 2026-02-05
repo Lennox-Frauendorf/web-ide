@@ -2,54 +2,57 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Web IDE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mobile Pro IDE</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
-    </head>
+</head>
 <body>
 
     <header class="titlebar">
+        <button id="toggleSidebar" class="icon-btn mobile-only">☰</button>
         <div class="menu-group">
-            <button id="btnOpenFolder" class="btn">📂 Ordner öffnen</button>
-            <button id="btnSave" class="btn">💾 Speichern (Ctrl+S)</button>
+            <button id="btnOpenFolder" class="btn">📂 <span class="desktop-only">Ordner</span></button>
+            <button id="btnSave" class="btn btn-primary">💾</button>
         </div>
-        <div class="title-text" id="projectTitle">Kein Projekt geöffnet</div>
+        <div class="tab-scroller">
+            <div id="tabsContainer" class="tabs-header"></div>
+        </div>
+        <button id="togglePreview" class="btn">👁️ <span class="desktop-only">Preview</span></button>
     </header>
 
     <div class="workspace">
-        
-        <aside class="sidebar">
-            <div class="sidebar-header">EXPLORER</div>
-            <div id="fileTree" class="file-tree">
-                <div class="empty-msg">Öffne einen Ordner, um zu beginnen.</div>
-            </div>
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">EXPLORER <span id="closeSidebar" class="mobile-only">✕</span></div>
+            <div id="fileTree" class="file-tree"></div>
         </aside>
 
-        <div class="editor-pane">
-            <div class="tabs-header" id="tabsContainer">
-                </div>
-            
+        <main class="editor-pane">
             <div id="monaco-container"></div>
-        </div>
-
-        <div class="resizer" id="resizer"></div>
+        </main>
 
         <div class="preview-pane" id="previewPane">
             <div class="panel-header">
                 <span>VORSCHAU</span>
-                <button id="refreshPreview" class="icon-btn">↻</button>
+                <button id="closePreview" class="mobile-only">✕</button>
             </div>
-            <iframe id="previewFrame" sandbox="allow-scripts allow-modals"></iframe>
+            <iframe id="previewFrame"></iframe>
         </div>
     </div>
 
-    <footer class="statusbar">
-        <div id="statusLeft">Bereit</div>
-        <div id="statusRight">UTF-8</div>
-    </footer>
+    <div class="mobile-toolbar mobile-only">
+        <button onclick="insertText('{')">{</button>
+        <button onclick="insertText('}')">}</button>
+        <button onclick="insertText('(')">(</button>
+        <button onclick="insertText(')')">)</button>
+        <button onclick="insertText('<')"><</button>
+        <button onclick="insertText('>')">></button>
+        <button onclick="insertText('/')">/</button>
+        <button onclick="insertText('\"')">"</button>
+    </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.38.0/min/vs/loader.min.js"></script>
+    <script src="https://unpkg.com/emmet-monaco-es/dist/emmet-monaco.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
