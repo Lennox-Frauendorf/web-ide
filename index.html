@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro Web IDE</title>
+    <link rel="stylesheet" href="style.css">
+    </head>
+<body>
+
+    <header class="titlebar">
+        <div class="menu-group">
+            <button id="btnOpenFolder" class="btn">📂 Ordner öffnen</button>
+            <button id="btnSave" class="btn">💾 Speichern (Ctrl+S)</button>
+        </div>
+        <div class="title-text" id="projectTitle">Kein Projekt geöffnet</div>
+    </header>
+
+    <div class="workspace">
+        
+        <aside class="sidebar">
+            <div class="sidebar-header">EXPLORER</div>
+            <div id="fileTree" class="file-tree">
+                <div class="empty-msg">Öffne einen Ordner, um zu beginnen.</div>
+            </div>
+        </aside>
+
+        <div class="editor-pane">
+            <div class="tabs-header" id="tabsContainer">
+                </div>
+            
+            <div id="monaco-container"></div>
+        </div>
+
+        <div class="resizer" id="resizer"></div>
+
+        <div class="preview-pane" id="previewPane">
+            <div class="panel-header">
+                <span>VORSCHAU</span>
+                <button id="refreshPreview" class="icon-btn">↻</button>
+            </div>
+            <iframe id="previewFrame" sandbox="allow-scripts allow-modals"></iframe>
+        </div>
+    </div>
+
+    <footer class="statusbar">
+        <div id="statusLeft">Bereit</div>
+        <div id="statusRight">UTF-8</div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.38.0/min/vs/loader.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
