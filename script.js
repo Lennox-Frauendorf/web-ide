@@ -1,92 +1,186 @@
-let editor;
-let openTabs = [];
-let activeTabId = null;
+// --- KONFIGURATION & STATE ---
+const STORAGE_KEY_USERS = 'gimgm_users';
+const STORAGE_KEY_CURRENT = 'gimgm_current_user';
+const STORAGE_KEY_CODE = 'gimgm_saved_code_'; // + username
 
-// Initialisierung mit Emmet
-require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.38.0/min/vs' }});
+let currentUser = null;
+let currentMode = 'login'; // login oder register
 
-require(['vs/editor/editor.main'], function() {
-    // Emmet registrieren
-    emmetMonaco.emmetHTML(monaco);
+// --- DOM ELEMENTE ---
+const authContainer = document.getElementById('auth-container');
+const ideContainer = document.getElementById('ide-container');
+const statusBar = document.getElementById('status-bar');
+const codeHTML = document.getElementById('code-html');
+const codeCSS = document.getElementById('code-css');
+const codeJS = document.getElementById('code-js');
+const previewFrame = document.getElementById('preview-frame');
 
-    editor = monaco.editor.create(document.getElementById('monaco-container'), {
-        theme: 'vs-dark',
-        automaticLayout: true,
-        fontSize: 16, // Größer für Mobile
-        wordWrap: "on",
-        minimap: { enabled: false }, // Platz sparen auf Mobile
-        unicodeHighlight: { ambiguousCharacters: false }
-    });
+// --- INITIALISIERUNG ---
+window.onload = () => {
+    checkLogin();
+};
 
-    // Custom Commands
-    editor.addCommand(monaco.KeyCode.US_IT_FRONT_SLASH, () => {
-        // Beispiel für Kommentar-Shortcut
-        editor.trigger('keyboard', 'editor.action.commentLine', null);
-    });
+// --- AUTH SYSTEM ---
+function switchAuth(mode) {
+    currentMode = mode;
+    document.getElementById('tab-login').classList.toggle('active', mode === 'login');
+    document.getElementById('tab-register').classList.toggle('active', mode === 'register');
+    document.getElementById('auth-btn').innerText = mode === 'login' ? 'Anmelden' : 'Registrieren';
+    document.getElementById('auth-msg').innerText = '';
+}
 
-    // Emmet "!" für HTML Boilerplate manuell verstärken
-    editor.onKeyDown((e) => {
-        if (e.browserEvent.key === '!' && editor.getModel().getLanguageId() === 'html') {
-            // Wir lassen Monaco's Autocomplete den Rest machen oder fügen Logik ein
+document.getElementById('auth-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const user = document.getElementById('username').value;
+    const pass = document.getElementById('password').value;
+    const users = JSON.parse(localStorage.getItem(STORAGE_KEY_USERS) || '[]');
+
+    if (currentMode === 'register') {
+        if (users.find(u => u.user === user)) {
+            showMsg('Benutzername vergeben!', 'red');
+        } else {
+            users.push({ user, pass });
+            localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(users));
+            showMsg('Registriert! Bitte anmelden.', 'green');
+            switchAuth('login');
         }
-    });
+    } else {
+        const found = users.find(u => u.user === user && u.pass === pass);
+        if (found) {
+            loginUser(found.user);
+        } else {
+            showMsg('Falsche Daten!', 'red');
+        }
+    }
 });
 
-// Datei öffnen Funktion (erweitert für Boilerplate)
-async function openFile(fileHandle) {
-    const file = await fileHandle.getFile();
-    let content = await file.text();
+function loginUser(username) {
+    currentUser = username;
+    localStorage.setItem(STORAGE_KEY_CURRENT, username);
+    authContainer.style.display = 'none';
+    ideContainer.style.display = 'flex';
+    statusBar.style.display = 'flex';
+    loadCode();
+    updatePreview();
+}
 
-    // Falls Datei leer ist und HTML: Boilerplate anbieten
-    if (content.trim() === "" && file.name.endsWith('.html')) {
-        content = `<!DOCTYPE html>\n<html lang="de">\n<head>\n    <meta charset="UTF-8">\n    <title>Document</title>\n</head>\n<body>\n    \n</body>\n</html>`;
-    }
+function checkLogin() {
+    const savedUser = localStorage.getItem(STORAGE_KEY_CURRENT);
+    if (savedUser) loginUser(savedUser);
+}
 
-    const tabId = Date.now().toString();
-    const model = monaco.editor.createModel(content, getLanguage(file.name));
+function logout() {
+    localStorage.removeItem(STORAGE_KEY_CURRENT);
+    location.reload();
+}
+
+function showMsg(text, color) {
+    const msg = document.getElementById('auth-msg');
+    msg.style.color = color;
+    msg.innerText = text;
+}
+
+// --- IDE FUNKTIONEN ---
+
+// Tab Switching
+function switchTab(type) {
+    // Hide all textareas
+    document.querySelectorAll('.code-input').forEach(el => el.classList.remove('active'));
+    // Deactivate all headers
+    document.querySelectorAll('.editor-tabs .tab').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.file').forEach(el => el.classList.remove('active'));
+
+    // Activate selected
+    document.getElementById(`code-${type}`).classList.add('active');
+    document.getElementById(`tab-header-${type}`).classList.add('active');
     
-    const newTab = { id: tabId, handle: fileHandle, model, name: file.name };
-    openTabs.push(newTab);
-    renderTab(newTab);
-    activateTab(tabId);
+    // Highlight sidebar file (optional, simple logic)
+    const files = document.querySelectorAll('.file');
+    if(type === 'html') files[0].classList.add('active');
+    if(type === 'css') files[1].classList.add('active');
+    if(type === 'js') files[2].classList.add('active');
 }
 
-// Mobile Sidebar Steuerung
-document.getElementById('toggleSidebar').onclick = () => {
-    document.getElementById('sidebar').classList.toggle('open');
-};
-
-document.getElementById('closeSidebar').onclick = () => {
-    document.getElementById('sidebar').classList.remove('open');
-};
-
-// Preview Steuerung (Mobile Overlay)
-document.getElementById('togglePreview').onclick = () => {
-    const pane = document.getElementById('previewPane');
-    pane.classList.toggle('open');
-    if(pane.classList.contains('open')) updatePreview();
-};
-
-document.getElementById('closePreview').onclick = () => {
-    document.getElementById('previewPane').classList.remove('open');
-};
-
-// Helper für mobile Symbolleiste
-function insertText(text) {
-    const selection = editor.getSelection();
-    const range = new monaco.Range(selection.startLineNumber, selection.startColumn, selection.endLineNumber, selection.endColumn);
-    editor.executeEdits("mobile-toolbar", [{ range: range, text: text, forceMoveMarkers: true }]);
-    editor.focus();
-}
-
-// Preview Logik (Index.html sucht autom. CSS/JS im gleichen Ordner)
+// Live Preview Logic
 function updatePreview() {
-    const tab = openTabs.find(t => t.id === activeTabId);
-    if (!tab || !tab.name.endsWith('.html')) return;
+    const html = codeHTML.value;
+    const css = `<style>${codeCSS.value}</style>`;
+    const js = `<script>${codeJS.value}<\/script>`; // Escape slash
 
-    const blob = new Blob([tab.model.getValue()], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    document.getElementById('previewFrame').src = url;
+    const content = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            ${css}
+        </head>
+        <body>
+            ${html}
+            ${js}
+        </body>
+        </html>
+    `;
+
+    const doc = previewFrame.contentWindow.document;
+    doc.open();
+    doc.write(content);
+    doc.close();
+    
+    saveCode(); // Auto-Save trigger
 }
 
-// ... Restliche Funktionen (renderTree, saveFile) wie zuvor ...
+// Auto-Save im LocalStorage
+function saveCode() {
+    if (!currentUser) return;
+    const data = {
+        html: codeHTML.value,
+        css: codeCSS.value,
+        js: codeJS.value
+    };
+    localStorage.setItem(STORAGE_KEY_CODE + currentUser, JSON.stringify(data));
+}
+
+function loadCode() {
+    if (!currentUser) return;
+    const data = JSON.parse(localStorage.getItem(STORAGE_KEY_CODE + currentUser));
+    if (data) {
+        codeHTML.value = data.html;
+        codeCSS.value = data.css;
+        codeJS.value = data.js;
+    } else {
+        // Default Template
+        codeHTML.value = '<h1>Hallo GimGm-Code!</h1>\n<p>Bearbeite mich...</p>';
+        codeCSS.value = 'body { font-family: sans-serif; padding: 20px; }\nh1 { color: #007acc; }';
+        codeJS.value = 'console.log("Willkommen bei GimGm-Code");';
+    }
+}
+
+// Event Listeners für Live Update
+codeHTML.addEventListener('input', updatePreview);
+codeCSS.addEventListener('input', updatePreview);
+codeJS.addEventListener('input', updatePreview);
+
+// Download Feature
+function downloadCode() {
+    const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+    <style>${codeCSS.value}</style>
+</head>
+<body>
+    ${codeHTML.value}
+    <script>${codeJS.value}</script>
+</body>
+</html>`;
+    
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'GimGm_Projekt.html';
+    a.click();
+}
+
+function runCode() {
+    updatePreview(); // Manuelles Neuladen
+}
