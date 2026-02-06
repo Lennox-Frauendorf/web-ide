@@ -1,68 +1,81 @@
 :root {
     --bg-dark: #1e1e1e;
-    --sidebar-bg: #252526;
+    --bg-darker: #252526;
+    --bg-activity: #333333;
+    --bg-sidebar: #252526;
     --accent: #007acc;
-    --border: #333;
-    --text: #ccc;
+    --text-main: #cccccc;
+    --text-white: #ffffff;
+    --border: #3e3e42;
 }
 
-body {
-    margin: 0; height: 100vh; display: flex; flex-direction: column;
-    background: var(--bg-dark); color: var(--text); font-family: sans-serif;
-    overflow: hidden;
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+body { background-color: var(--bg-dark); color: var(--text-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+/* AUTH SCREEN */
+#auth-container {
+    position: absolute; width: 100%; height: 100%;
+    background: var(--bg-dark); display: flex; justify-content: center; align-items: center; z-index: 100;
 }
-
-.titlebar {
-    height: 45px; background: #333; display: flex; align-items: center; 
-    padding: 0 5px; border-bottom: 1px solid #000; z-index: 100;
+.auth-box { background: var(--bg-darker); padding: 2rem; border: 1px solid var(--border); width: 350px; text-align: center; }
+.auth-box h1 { color: var(--accent); margin-bottom: 1rem; }
+.auth-box input {
+    width: 100%; padding: 10px; margin: 5px 0; background: #3c3c3c; border: 1px solid var(--border); color: white; outline: none;
 }
-
-.workspace { display: flex; flex: 1; position: relative; overflow: hidden; }
-
-/* Sidebar Responsive */
-.sidebar {
-    width: 260px; background: var(--sidebar-bg); border-right: 1px solid var(--border);
-    transition: transform 0.3s ease;
+.auth-box button {
+    width: 100%; padding: 10px; margin-top: 10px; background: var(--accent); color: white; border: none; cursor: pointer;
 }
+.auth-box button:hover { opacity: 0.9; }
+.tabs { display: flex; margin-bottom: 10px; }
+.tabs button { background: transparent; border-bottom: 2px solid transparent; width: 50%; }
+.tabs button.active { border-bottom: 2px solid var(--accent); }
 
-/* Editor */
-.editor-pane { flex: 1; min-width: 0; position: relative; }
-#monaco-container { height: 100%; width: 100%; }
+/* IDE LAYOUT */
+#ide-container { flex: 1; display: flex; height: calc(100vh - 22px); }
 
-/* Preview */
-.preview-pane {
-    width: 40%; background: white; display: flex; flex-direction: column;
-    border-left: 1px solid var(--border); transition: 0.3s;
+/* Activity Bar */
+.activity-bar { width: 50px; background: var(--bg-activity); display: flex; flex-direction: column; align-items: center; padding-top: 10px; }
+.activity-bar .icon { color: #858585; font-size: 24px; margin-bottom: 25px; cursor: pointer; padding: 10px 0; width: 100%; text-align: center; }
+.activity-bar .icon.active { color: white; border-left: 2px solid white; }
+.activity-bar .icon:hover { color: white; }
+.spacer { flex: 1; }
+
+/* Sidebar */
+.sidebar { width: 200px; background: var(--bg-sidebar); border-right: 1px solid var(--border); }
+.sidebar-title { padding: 10px; font-size: 0.8rem; font-weight: bold; letter-spacing: 1px; }
+.folder-header { padding: 5px 10px; font-weight: bold; cursor: pointer; }
+.file { padding: 5px 20px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+.file:hover { background: #2a2d2e; }
+.file.active { background: #37373d; }
+
+/* Editor Area */
+.editor-area { flex: 2; display: flex; flex-direction: column; background: var(--bg-dark); }
+.editor-tabs { display: flex; background: var(--bg-darker); height: 35px; overflow-x: auto; justify-content: space-between; }
+.editor-tabs .tab {
+    padding: 8px 15px; background: #2d2d2d; border-right: 1px solid var(--border); cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; gap: 8px;
 }
+.editor-tabs .tab.active { background: var(--bg-dark); border-top: 1px solid var(--accent); color: white; }
+.actions button { background: transparent; border: none; color: white; padding: 0 10px; cursor: pointer; height: 100%; }
+.actions button:hover { background: #444; }
 
-/* Mobile Adjustments */
-@media (max-width: 768px) {
-    .desktop-only { display: none; }
-    .sidebar {
-        position: absolute; left: 0; top: 0; bottom: 0; z-index: 200;
-        transform: translateX(-100%);
-    }
-    .sidebar.open { transform: translateX(0); }
-    .preview-pane {
-        position: absolute; right: 0; top: 0; bottom: 0; left: 0;
-        width: 100% !important; transform: translateX(100%); z-index: 300;
-    }
-    .preview-pane.open { transform: translateX(0); }
-    
-    .mobile-toolbar {
-        height: 40px; background: #2d2d2d; display: flex; 
-        overflow-x: auto; align-items: center; padding: 0 5px;
-    }
-    .mobile-toolbar button {
-        flex: 0 0 40px; height: 30px; margin: 2px; background: #444;
-        color: white; border: none; border-radius: 3px;
-    }
+.code-container { flex: 1; position: relative; }
+.code-input {
+    width: 100%; height: 100%; background: var(--bg-dark); color: #d4d4d4; border: none; resize: none; padding: 10px;
+    font-family: 'Consolas', 'Courier New', monospace; font-size: 14px; outline: none; display: none; line-height: 1.5;
 }
+.code-input.active { display: block; }
 
-.tabs-header { display: flex; overflow-x: auto; height: 100%; }
-.tab { 
-    padding: 0 15px; display: flex; align-items: center; 
-    background: #2d2d2d; border-right: 1px solid #111; font-size: 12px;
-    white-space: nowrap; cursor: pointer;
-}
-.tab.active { background: var(--bg-dark); color: white; border-top: 2px solid var(--accent); }
+/* Preview Area */
+.preview-area { flex: 1; border-left: 1px solid var(--border); display: flex; flex-direction: column; background: white; }
+.preview-header { background: var(--bg-darker); color: white; padding: 5px 10px; font-size: 0.8rem; text-align: right; }
+iframe { width: 100%; height: 100%; border: none; background: white; }
+
+/* Status Bar */
+#status-bar { height: 22px; background: #007acc; color: white; display: flex; justify-content: space-between; align-items: center; padding: 0 10px; font-size: 12px; }
+.left span, .right span { margin: 0 10px; cursor: pointer; }
+
+/* Colors for Icons */
+.text-orange { color: #e34c26; }
+.text-blue { color: #264de4; }
+.text-yellow { color: #f0db4f; }
