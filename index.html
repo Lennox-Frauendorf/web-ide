@@ -1,58 +1,96 @@
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mobile Pro IDE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GimGm-Code - Web Editor</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
 </head>
 <body>
 
-    <header class="titlebar">
-        <button id="toggleSidebar" class="icon-btn mobile-only">☰</button>
-        <div class="menu-group">
-            <button id="btnOpenFolder" class="btn">📂 <span class="desktop-only">Ordner</span></button>
-            <button id="btnSave" class="btn btn-primary">💾</button>
-        </div>
-        <div class="tab-scroller">
-            <div id="tabsContainer" class="tabs-header"></div>
-        </div>
-        <button id="togglePreview" class="btn">👁️ <span class="desktop-only">Preview</span></button>
-    </header>
-
-    <div class="workspace">
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">EXPLORER <span id="closeSidebar" class="mobile-only">✕</span></div>
-            <div id="fileTree" class="file-tree"></div>
-        </aside>
-
-        <main class="editor-pane">
-            <div id="monaco-container"></div>
-        </main>
-
-        <div class="preview-pane" id="previewPane">
-            <div class="panel-header">
-                <span>VORSCHAU</span>
-                <button id="closePreview" class="mobile-only">✕</button>
+    <div id="auth-container">
+        <div class="auth-box">
+            <h1>GimGm-Code</h1>
+            <div class="tabs">
+                <button id="tab-login" class="active" onclick="switchAuth('login')">Anmelden</button>
+                <button id="tab-register" onclick="switchAuth('register')">Registrieren</button>
             </div>
-            <iframe id="previewFrame"></iframe>
+            
+            <form id="auth-form">
+                <input type="text" id="username" placeholder="Benutzername" required>
+                <input type="password" id="password" placeholder="Passwort" required>
+                <button type="submit" id="auth-btn">Anmelden</button>
+            </form>
+            <p id="auth-msg"></p>
         </div>
     </div>
 
-    <div class="mobile-toolbar mobile-only">
-        <button onclick="insertText('{')">{</button>
-        <button onclick="insertText('}')">}</button>
-        <button onclick="insertText('(')">(</button>
-        <button onclick="insertText(')')">)</button>
-        <button onclick="insertText('<')"><</button>
-        <button onclick="insertText('>')">></button>
-        <button onclick="insertText('/')">/</button>
-        <button onclick="insertText('\"')">"</button>
+    <div id="ide-container" style="display: none;">
+        
+        <div class="activity-bar">
+            <div class="icon active"><i class="far fa-copy"></i></div> <div class="icon"><i class="fas fa-search"></i></div>
+            <div class="icon"><i class="fas fa-code-branch"></i></div>
+            <div class="spacer"></div>
+            <div class="icon" onclick="logout()"><i class="fas fa-sign-out-alt"></i></div>
+            <div class="icon"><i class="fas fa-cog"></i></div>
+        </div>
+
+        <div class="sidebar">
+            <div class="sidebar-title">EXPLORER</div>
+            <div class="file-tree">
+                <div class="folder-header"><i class="fas fa-chevron-down"></i> PROJEKT</div>
+                <div class="file active" onclick="switchTab('html')"><i class="fab fa-html5 text-orange"></i> index.html</div>
+                <div class="file" onclick="switchTab('css')"><i class="fab fa-css3-alt text-blue"></i> style.css</div>
+                <div class="file" onclick="switchTab('js')"><i class="fab fa-js text-yellow"></i> script.js</div>
+            </div>
+        </div>
+
+        <div class="editor-area">
+            <div class="editor-tabs">
+                <div class="tab active" id="tab-header-html" onclick="switchTab('html')">
+                    <i class="fab fa-html5 text-orange"></i> index.html
+                </div>
+                <div class="tab" id="tab-header-css" onclick="switchTab('css')">
+                    <i class="fab fa-css3-alt text-blue"></i> style.css
+                </div>
+                <div class="tab" id="tab-header-js" onclick="switchTab('js')">
+                    <i class="fab fa-js text-yellow"></i> script.js
+                </div>
+                <div class="actions">
+                    <button onclick="downloadCode()" title="Download Projekt"><i class="fas fa-download"></i></button>
+                    <button onclick="runCode()" title="Neu laden"><i class="fas fa-play"></i></button>
+                </div>
+            </div>
+
+            <div class="code-container">
+                <textarea id="code-html" class="code-input active" placeholder="" spellcheck="false"></textarea>
+                <textarea id="code-css" class="code-input" placeholder="/* CSS hier schreiben */" spellcheck="false"></textarea>
+                <textarea id="code-js" class="code-input" placeholder="// JavaScript hier schreiben" spellcheck="false"></textarea>
+            </div>
+        </div>
+
+        <div class="preview-area">
+            <div class="preview-header">LIVE VORSCHAU</div>
+            <iframe id="preview-frame"></iframe>
+        </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.38.0/min/vs/loader.min.js"></script>
-    <script src="https://unpkg.com/emmet-monaco-es/dist/emmet-monaco.min.js"></script>
+    <div id="status-bar" style="display: none;">
+        <div class="left">
+            <span><i class="fas fa-code-branch"></i> main</span>
+            <span><i class="far fa-times-circle"></i> 0</span>
+            <span><i class="fas fa-exclamation-triangle"></i> 0</span>
+        </div>
+        <div class="right">
+            <span>Zeile 1, Spalte 1</span>
+            <span>UTF-8</span>
+            <span>GimGm-Code v1.0</span>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
